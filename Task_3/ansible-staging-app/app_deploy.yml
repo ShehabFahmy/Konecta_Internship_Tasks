@@ -1,0 +1,14 @@
+---
+- name: Install the required packages
+  become: yes
+  hosts: webservers
+  gather_facts: yes
+  roles:
+    - requirements
+
+- name: Configure the web server
+  become: yes
+  hosts: webservers
+  gather_facts: no
+  roles:
+    - webserver

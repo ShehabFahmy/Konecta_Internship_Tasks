@@ -1,0 +1,14 @@
+---
+# tasks file for roles/requirements
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - nodejs
+      - npm
+      - ufw
+    state: present

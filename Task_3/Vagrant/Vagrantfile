@@ -1,0 +1,36 @@
+Vagrant.configure("2") do |config|
+
+  # Define web01 VM with Ubuntu
+  config.vm.define "web01" do |web01|
+    web01.vm.box = "generic/ubuntu2204"
+    web01.vm.hostname = "web01"
+    web01.vm.network "private_network", ip: "192.168.56.41"
+    web01.vm.provider "libvirt" do |vb|
+      vb.memory = "600"
+    end
+    
+    # Configure "web01" as an Ansible agent
+    # Create user "ansibleadmin" with sudo privileges and no password
+    web01.vm.provision "shell", inline: <<-SHELL
+      echo "Provisioning web01..."
+      sudo useradd -m -s /bin/bash "ansibleadmin"
+      sudo usermod -aG sudo "ansibleadmin"
+      echo "ansibleadmin ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansibleadmin > /dev/null
+      sudo chmod 440 "/etc/sudoers.d/ansibleadmin"
+      echo "User 'ansibleadmin' has been created with sudo privileges and no password."
+    SHELL
+    
+    # Copy the public key from host to the VM
+    web01.vm.provision "file", source: "../Secrets/ansible_course.pub", destination: "/tmp/ansible_course.pub"
+    
+    # Move the key to the correct location with appropriate permissions
+    web01.vm.provision "shell", inline: <<-SHELL
+      sudo su - ansibleadmin
+      mkdir -p /home/ansibleadmin/.ssh
+      mv /tmp/ansible_course.pub /home/ansibleadmin/.ssh/authorized_keys
+      chmod 600 /home/ansibleadmin/.ssh/authorized_keys
+      chown ansibleadmin:ansibleadmin /home/ansibleadmin/.ssh/authorized_keys
+    SHELL
+  end
+
+end

@@ -1,0 +1,46 @@
+---
+# tasks file for roles/webserver
+- name: Create app directory
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Copy package.json
+  copy:
+    src: package.json
+    dest: "{{ app_dir }}/package.json"
+
+- name: Copy app.js
+  copy:
+    src: app.js
+    dest: "{{ app_dir }}/app.js"
+
+- name: Install app dependencies
+  npm:
+    path: "{{ app_dir }}"
+
+- name: Deploy systemd service file
+  template:
+    src: my_node_app.service.j2
+    dest: /etc/systemd/system/my_node_app.service
+    mode: '0644'
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start Node.js service
+  ansible.builtin.systemd:
+    name: my_node_app
+    state: started
+    enabled: yes
+
+- name: Allow required ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ open_ports }}"

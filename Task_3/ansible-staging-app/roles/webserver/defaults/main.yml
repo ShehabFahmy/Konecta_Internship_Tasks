@@ -1,0 +1,7 @@
+---
+# defaults file for roles/webserver
+open_ports:
+  - 22
+  - 3000
+
+app_dir: /opt/my_node_app
