@@ -1,0 +1,17 @@
+---
+# handlers file for roles/jenkins
+- name: Restart Jenkins
+  service:
+    name: jenkins
+    state: restarted
+  become: true
+  notify: Wait for Jenkins to be up
+
+- name: Wait for Jenkins to be up
+  uri:
+    url: "http://localhost:8080/login"
+    status_code: 200
+  register: jenkins_status
+  retries: 10
+  delay: 15
+  until: jenkins_status.status == 200

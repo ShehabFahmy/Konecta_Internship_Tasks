@@ -1,0 +1,10 @@
+---
+# defaults file for roles/jenkins
+jenkins_plugins:
+  - git                         # Required for Git SCM
+  - github                      # Required to enable GitHub hook trigger for GITScm polling
+  - workflow-aggregator         # All essentials for declarative pipeline support
+  - credentials                 # Manage Jenkins credentials securely
+  - docker-workflow             # Build and push Docker images
+  - ssh-agent                   # SSH keys to ephemeral EC2
+  - pipeline-utility-steps      # JSON parsing, file ops, etc.

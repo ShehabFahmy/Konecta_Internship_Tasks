@@ -1,0 +1,71 @@
+def IMAGE_NAME = "shehabfahmy/nginx-ci"
+def IMAGE_TAG = ""
+
+pipeline {
+  agent none
+
+  parameters {
+    string(name: 'EC2_IP', defaultValue: '', description: 'Ephemeral EC2 IP')
+  }
+
+  stages {
+
+    stage('Build Docker Image') {
+      agent {
+        docker {
+          image 'docker:latest'
+          args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+      }
+      steps {
+        dir("./App") {
+          // Mark pipeline directory as safe
+          sh 'git config --global --add safe.directory $(pwd)/..'
+          script {
+            // Git commit SHA
+            IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+          }
+
+          sh """
+            echo "<h1>Build ${BUILD_NUMBER} at \$(date)</h1>" > index.html
+            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+          """
+        }
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      agent {
+        docker {
+          image 'docker:latest'
+          args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+      }
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh """
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+          """
+        }
+      }
+    }
+
+    stage('Deploy to EC2') {
+      agent any
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'ansible-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+          sh """
+            ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@${params.EC2_IP} \
+              "docker rm -f web || true && \
+               docker run -d --name web -p 80:80 ${IMAGE_NAME}:${IMAGE_TAG}"
+            
+            ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@${params.EC2_IP} \
+              "curl -s http://localhost:80"
+          """
+        }
+      }
+    }
+
+  }
+}

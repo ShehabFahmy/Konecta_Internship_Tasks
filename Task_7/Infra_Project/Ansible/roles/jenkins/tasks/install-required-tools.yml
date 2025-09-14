@@ -1,0 +1,22 @@
+---
+- name: Install required APT packages
+  apt:
+    name:
+      - git
+      - docker.io
+      - unzip
+      - curl
+      - wget
+      - gnupg
+      - lsb-release
+      # - build-essential  # if your build involves compiling code (C/C++/Java)
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Add Jenkins user to Docker group
+  user:
+    name: jenkins
+    groups: docker
+    append: yes
+  become: yes

@@ -1,0 +1,38 @@
+pipeline {
+  agent {
+    docker {
+      image 'amazon/aws-cli:latest'
+      args '--entrypoint="" -u root'
+    }
+  }
+  environment {
+    AWS_REGION = 'us-east-1'
+  }
+  stages {
+    stage('Discover ephemeral EC2s') {
+      steps {
+        script {
+          echo "Finding ephemeral EC2 instances..."
+          def instanceIds = sh(script: """
+            aws ec2 describe-instances \
+              --region ${AWS_REGION} \
+              --filters "Name=tag:lifespan,Values=ephemeral" \
+                      "Name=tag:owner,Values=jenkins" \
+                      "Name=instance-state-name,Values=pending,running,stopping,stopped" \
+              --query "Reservations[*].Instances[*].InstanceId" \
+              --output text
+            """,returnStdout: true).trim().split()
+          
+          if (instanceIds.size() > 0 && instanceIds[0] != "") {
+            echo "Found ephemeral instances: ${instanceIds.join(', ')}"
+            echo "Terminating instances..."
+            sh "aws ec2 terminate-instances --instance-ids ${instanceIds.join(' ')}"
+            echo "Termination initiated."
+          } else {
+              echo "No ephemeral instances found."
+          }
+        }
+      }
+    }
+  }
+}

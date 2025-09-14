@@ -1,0 +1,5 @@
+---
+ansible_ssh_key_cred_id: "ansible-ssh-key"
+ansible_ssh_key_user: "ec2-user"
+jenkins_admin_user: "admin"
+jenkins_admin_password: "admin123"

@@ -1,0 +1,13 @@
+---
+# tasks file for roles/jenkins
+- name: Install the tools used in the pipeline
+  include_tasks: install-required-tools.yml
+
+- name: Include the Jenkins installation tasks
+  include_tasks: install-jenkins.yml
+
+- name: Include the plugins installation tasks
+  include_tasks: install-jenkins-plugins.yml
+
+- name: Create Jenkins credentials for Ansible SSH Private Key
+  include_tasks: create-jenkins-credentials.yml

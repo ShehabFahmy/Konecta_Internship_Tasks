@@ -1,0 +1,50 @@
+- name: Disable Jenkins setup wizard
+  copy:
+    dest: /var/lib/jenkins/jenkins.install.UpgradeWizard.state
+    content: '2.0'
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+  become: yes
+
+- name: Ensure init.groovy.d directory exists
+  file:
+    path: /var/lib/jenkins/init.groovy.d
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0755'
+  become: yes
+
+- name: Create admin user via Groovy init script
+  copy:
+    dest: /var/lib/jenkins/init.groovy.d/basic-security.groovy
+    content: |
+      import jenkins.model.*
+      import hudson.security.*
+      def instance = Jenkins.getInstance()
+      def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+      hudsonRealm.createAccount("{{ jenkins_admin_user }}", "{{ jenkins_admin_password }}")
+      instance.setSecurityRealm(hudsonRealm)
+      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+      instance.setAuthorizationStrategy(strategy)
+      instance.save()
+    owner: jenkins
+    group: jenkins
+    mode: '0644'
+  become: yes
+  notify: Restart Jenkins
+
+# VERY IMPORTANT: Restart Jenkins NOW to apply admin user
+- name: Run handlers now
+  meta: flush_handlers
+
+- name: Install Jenkins plugins
+  jenkins_plugin:
+    name: "{{ item }}"
+    state: present
+    url: http://localhost:8080
+    url_username: "{{ jenkins_admin_user }}"
+    url_password: "{{ jenkins_admin_password }}"
+  loop: "{{ jenkins_plugins }}"
+  notify: Restart Jenkins
