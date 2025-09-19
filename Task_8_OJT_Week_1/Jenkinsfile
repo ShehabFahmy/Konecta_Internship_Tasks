@@ -1,0 +1,79 @@
+pipeline {
+  agent any
+
+  stages {
+
+    stage('Checkout') {
+      agent any
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install Dependencies') {
+      agent {
+        docker { image 'node:latest' }
+      }
+      steps {
+        dir("./App") {
+          sh '''
+            npm install
+          '''
+        }
+      }
+    }
+
+    stage('Lint Code') {
+      agent {
+        docker { image 'node:latest' }
+      }
+      steps {
+        dir("./App") {
+          // Using the eslint.config.mjs file, you can create a new custom one by running `npx eslint --init` and answering some questions
+          sh '''
+            npm run lint
+          '''
+        }
+      }
+    }
+
+    stage('Run Unit Tests') {
+      agent {
+        docker { image 'node:latest' }
+      }
+      steps {
+        dir("./App") {
+          sh '''
+            npm test
+          '''
+        }
+      }
+    }
+
+    stage('Build Docker Images') {
+      steps {
+        dir("./App") {
+          sh '''
+            docker build -t shehabfahmy/konecta-task8-backend:latest .
+          '''
+        }
+        dir("./PostgreSQL") {
+          sh '''
+            docker build -t shehabfahmy/konecta-task8-db:latest .
+          '''
+        }
+      }
+    }
+
+    stage('Deploy using Docker Compose') {
+      steps {
+        dir("./") {
+          sh '''
+            docker compose up -d
+          '''
+        }
+      }
+    }
+
+  }
+}

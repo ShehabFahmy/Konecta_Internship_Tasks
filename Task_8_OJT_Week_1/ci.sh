@@ -10,7 +10,7 @@ sudo apt install npm -y
 
 echo
 echo "|===============================================|"
-echo "|[!] Stage (2) Installing Dependencies...   |"
+echo "|[!] Stage (2) Installing Dependencies...       |"
 echo "|===============================================|"
 npm install
 
