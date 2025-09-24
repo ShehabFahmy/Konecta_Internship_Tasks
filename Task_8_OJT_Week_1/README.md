@@ -130,7 +130,10 @@ http jenkins-for-konecta-task8:8080
 ```
 - ***Note:*** Make sure to run the previous command in the project directory.
 2. A new window will open in your terminal after executing the previous command, use the URL in the `forwarding` row to access the Jenkins server:
-![Image](Screenshots/ngrok-link.png)
+
+<p align="center">
+  <img src="Screenshots/ngrok-link.png">
+</p>
 
 ##### GitHub Webhook Configuration
 1. Go to the repository **Settings** > **Webhooks** > **Add Webhook**:
@@ -139,7 +142,10 @@ http jenkins-for-konecta-task8:8080
     - Leave the rest as default.
 2. Add webhook.
 3. Refresh the page. You should see that it is working:
-![Image](Screenshots/webhook-config.png)
+
+<p align="center">
+  <img src="Screenshots/webhook-config.png">
+</p>
 
 #### Final Output
 
@@ -153,6 +159,104 @@ http jenkins-for-konecta-task8:8080
 
 ## Cloud Deployment using AWS and Terraform
 
-*To Be Continued*
+### Goal
+Host our application on **AWS** with the **minimum cost possible**.
+
+### Proposed Architecture
+Our code is split into three main parts:
+- **Frontend (static files)** → Hosted on **GitHub Pages**
+  - Files: `input/*` and `public/*`
+- **Backend (dynamic logic)** → Replaced by **AWS Lambda functions**, triggered via **AWS API Gateway**
+  - File replaced: `server.js`
+- **Database** → The PostgreSQL database (used in local deployments) is replaced with the original `history.json` file, stored in an **S3 bucket**
+
+### Important Notes
+- Why GitHub Pages?
+    - **Cost:** ***Free***
+    - **Benefits:**
+      - Enables version control for source code
+      - Eliminates the need for an extra S3 bucket with static website hosting
+
+- Why AWS Lambda?
+    - **Requests:**
+      - First **1 million requests/month** → **Free** (always free tier)
+      - Then **$0.20** per 1M requests
+      - **Our usage:** ~70 requests/day (≈ **2,100/month**) → ***well below free tier***
+
+    - **Compute Time:**
+      - First **400,000 GB-seconds/month** → **Free** (always free tier)
+      - Then **$0.0000166667** per GB-second
+      - **Our usage:**
+        - Each Lambda: ~100ms runtime, 128MB memory
+        - GB-seconds per request = `0.125 × 0.1` = 0.0125
+        - Total = `2,100 × 0.0125` = **26.25 GB-seconds/month** → ***well below free tier***
+    
+- Why AWS S3?
+    - **Storage:**
+      - `history.json` ≈ 50 KB → ***$0.000001/month***
+      - Storage Class Type → **Standard**, for instant access
+
+    - **Requests:**
+      - PUT, COPY, POST, LIST → **$0.005 per 1,000**
+      - GET → **$0.0004 per 1,000**
+      - **Our usage:**
+        - ~1,050 GET → **$0.00042/month**
+        - ~1,050 PUT → **$0.00525/month**
+        - Total = ***$0.00567/month (~half a cent)***
+
+- Why NOT AWS DynamoDB?:
+    - **Problem**: Source code is written in a way to "fetch all and save all" data.
+    - **Cost**: First **25 million requests** per month are **free** (always free tier), that would be better than AWS S3 if the source code allows fetching or updating only what you need.
+    - If we fetch all items and rewrite them all the time in DynamoDB, we are basically using it like a JSON file in S3 — but paying the DynamoDB overhead without benefiting from its strengths.
+
+- Total Cost Estimation:
+    - GitHub Pages = ***$0***
+    - AWS Lambda = ***$0*** (free tier)
+    - S3 Storage = ***$0.000001***
+    - S3 Requests = ***$0.00567***
+***Total ≈ $0.01/month (rounding up generously)***
+Even with **10x traffic (20,000+ requests)**, the cost would still stay ***under $0.10/month***.
+
+- Added a simple static authentication layer (case-insensitive first name or full name) to prevent unauthorized users from consuming backend API requests.
+  *Note: this is a lightweight protection mechanism and not a full security solution against large-scale DDoS attacks.*
+
+### Installation
+#### GitHub Pages
+1. Move the contents of the `public/` directory to the repository root so that `index.html` is directly in the root.
+2. Create a new GitHub repository and push the files:
+   ```bash
+   git init
+   git remote add origin <your-repo-url>
+   git add .
+   git commit -m "Initial commit"
+   git push -u origin main
+   ```
+3. Go to **Repository Settings** > **Pages**.
+   Under **Branch**, select `main` and click **Save**.
+4. (Optional) Add a custom domain:
+   - Configure DNS records at your domain registrar:
+     - `CNAME` → Name: `tat`, Target: `<your-user>.github.io`
+     - `A` → Name: `@`, Target: `185.199.110.153` (GitHub Pages IP)
+
+<p align="center">
+  <strong>Accessing the Website</strong>
+  <br>
+  <img src="Screenshots/cloud-auth.png">
+</p>
+
+#### AWS (with Terraform)
+1. Navigate to the [Terraform/](Terraform/) directory and run:
+   ```bash
+   terraform init
+   terraform apply
+   ```
+2. Copy the Terraform output `api_invoke_url` (remove the trailing `/`) and update the `API_BASE` variable in [script.js](Frontend_Cloud_Deployment/script.js).
+3. Push changes to GitHub to deploy the frontend.
+
+<p align="center">
+  <strong>Final Cloud Deployment</strong>
+  <br>
+  <img src="Screenshots/final-cloud.png">
+</p>
 
 ---

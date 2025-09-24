@@ -1,0 +1,63 @@
+/* Center the login box */
+.auth-box {
+  max-width: 320px;
+  margin: 10vh auto;
+  padding: 2rem;
+  text-align: center;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* Title & subtitle */
+.auth-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.auth-subtitle {
+  margin-bottom: 1.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Input field */
+.auth-input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.auth-input:focus {
+  border-color: #0078ff;
+}
+
+/* Button */
+.auth-btn {
+  width: 100%;
+  padding: 0.7rem;
+  background: #0078ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.auth-btn:hover {
+  background: #005fcc;
+}
+
+/* Error message */
+.auth-error {
+  margin-top: 1rem;
+  color: red;
+  display: none;
+  font-size: 0.9rem;
+}
+

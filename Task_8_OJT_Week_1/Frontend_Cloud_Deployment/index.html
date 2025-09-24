@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Availability</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div id="auth-container" class="auth-box">
+    <h2 class="auth-title">🔒 Team Availability Tracker</h2>
+    <p class="auth-subtitle">Enter your name to continue</p>
+
+    <input 
+      type="text" 
+      id="nameInput" 
+      class="auth-input" 
+      placeholder="e.g. Shehab Fahmy" 
+      autocomplete="off"
+    />
+    
+    <button id="loginBtn" class="auth-btn">Login</button>
+    
+    <p id="error" class="auth-error">Name not recognized.</p>
+  </div>
+
+  <div id="main-content" style="display: none;">
+    <div class="container">
+      <div class="header">
+        <h2>Team Availability</h2>
+        <div class="buttons">
+          <button id="saveBtn">Save</button>
+        </div>
+      </div>
+      <div>Click save after updating each week separately</div>
+      <table id="scheduleTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Week</th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+            <th>Sun</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
