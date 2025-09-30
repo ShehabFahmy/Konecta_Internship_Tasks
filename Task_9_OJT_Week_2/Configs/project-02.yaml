@@ -1,0 +1,11 @@
+project_name: "konecta-task9-gcp-project-4"
+project_id: "konecta-task9-gcp-project-id-4"
+organization_id: null
+billing_account: "XXXXXX-XXXXXX-XXXXXX"
+deletion_policy: "DELETE"
+labels:
+  owner: intern
+  environment: test
+apis:
+  - compute.googleapis.com
+  - iam.googleapis.com
